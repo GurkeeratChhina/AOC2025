@@ -11,7 +11,7 @@ public class Day03 : BaseDay
 
     public override ValueTask<string> Solve_1() => new($"{Part1()}");
 
-    public override ValueTask<string> Solve_2() => new($"{Part2()}");
+    public override ValueTask<string> Solve_2() => new($"{Part2WithoutStrings()}");
 
     public int Part1(){
         int sum = 0;
@@ -70,4 +70,33 @@ public class Day03 : BaseDay
         }
         return sum;
     }
+
+    public long Part2WithoutStrings() {
+        long sum = 0;
+        int numDigits = 12;
+        foreach (var line in _input) {
+            char[] bestSoFar = new char[numDigits];
+            for (int i = 0; i < line.Length; i++) {
+                for (int j = 0; j < numDigits; j++) {
+                    if (line.Length-i < numDigits -j) {
+                        continue;
+                    }
+                    if (line[i] > bestSoFar[j]) {
+                        bestSoFar[j] = line[i];
+                        for (int k = j+1; k < numDigits; k++) {
+                            bestSoFar[k] = '0';
+                        }
+                        break;
+                    }
+                }
+            }
+            long number = 0;
+            for (int i = 0; i < numDigits; i++) {
+                number = number * 10 + (bestSoFar[i] - '0');
+            }
+            sum += number;
+        }
+        return sum;
+    }
+
 }
