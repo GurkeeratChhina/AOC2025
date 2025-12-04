@@ -11,7 +11,7 @@ public class Day04 : BaseDay
 
     public override ValueTask<string> Solve_1() => new($"{Part1()}");
 
-    public override ValueTask<string> Solve_2() => new($"{Part2Faster()}");
+    public override ValueTask<string> Solve_2() => new($"{Part2Faster3()}");
 
     public int Part1(){
         int height = _input.Length;
@@ -145,7 +145,7 @@ public class Day04 : BaseDay
         int width = _input[0].Length;
         int count = 0;
         int surrounding;
-        int[,] grid = new int[height, width]; //
+        int[,] grid = new int[height, width];
         (int,int)[] dirs ={(-1,-1), (0,-1), (1,-1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1)};
         int nx;
         int ny;
@@ -184,22 +184,89 @@ public class Day04 : BaseDay
                     count++;
                     grid[i,j] = 0;
                     addNeighboursToQueue(i,j);
-
-                    while(Q.Count > 0) {
-                        var (y,x) = Q.Dequeue();
-                        if (grid[y,x] >0 & grid[y,x] <= 4) {
-                            count++;
-                            grid[y,x] = 0;
-                            addNeighboursToQueue(y,x);
-                        } else {
-                            grid[y,x]--;
-                        }
-                    }
                 }
+            }
+        }
+
+        while(Q.Count > 0) {
+            var (y,x) = Q.Dequeue();
+            if (grid[y,x] == 0) {
+                continue;
+            }
+            grid[y,x]--;
+            if (grid[y,x] < 4) {
+                count++;
+                grid[y,x] = 0;
+                addNeighboursToQueue(y,x);
             }
         }
         
         return count;
+    }
+
+    public int Part2Faster3() {
+        int height = _input.Length;
+        int width = _input[0].Length;
+        int size = height * width;
+        int totalDeaths = 0;
+        
+
+        byte[] grid = new byte[size]; //flattened grid of neighbours, counting oneself.
+        var q = new Queue<int>();
+
+        Span<(int dx, int dy)> dirs = stackalloc (int, int)[]
+        {
+            (-1,-1),(0,-1),(1,-1),
+            (-1, 0),(0, 0),(1, 0),
+            (-1, 1),(0, 1),(1, 1)
+        };
+
+        //populate grid from input
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (_input[y][x] == '@') {
+                    // increment neighbors
+                    byte count = 0;
+                    foreach (var (dx, dy) in dirs) {
+                        int nx = x + dx;
+                        int ny = y + dy;
+                        
+                        if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
+                            if (_input[ny][nx] == '@') {
+                                count++;
+                            }
+                        }  
+                    }
+                    grid[y*width+x] = count;
+                    if (count < 5) {
+                        q.Enqueue(y*width+x);
+                    }                     
+                }
+            }
+        }
+
+        while (q.Count > 0) {
+            int i = q.Dequeue();
+            if (grid[i] == 0) continue;
+            grid[i] = 0;
+            totalDeaths++;
+
+            int y = i / width;
+            int x = i % width; 
+
+            foreach (var (dx, dy) in dirs) {
+                int nx = x + dx;
+                int ny = y + dy;
+                if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
+                    int newi = ny * width + nx;
+                    if (grid[newi] == 0) continue;
+                    grid[newi]--;
+                    if (grid[newi] < 5) q.Enqueue(newi);
+                }
+            }
+        }
+
+        return totalDeaths;
     }
 
     
