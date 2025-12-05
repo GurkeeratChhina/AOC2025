@@ -340,11 +340,8 @@ public class Day04 : BaseDay
                         for (int dy = -1; dy <= 1; dy++) {
                             int nx = x + dx;
                             int ny = y + dy;
-                            
-                            if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
-                                if (_input[ny][nx] == '@') {
-                                    count++;
-                                }
+                            if (nx >= 0 && nx < width && ny >= 0 && ny < height && _input[ny][nx] == '@') {
+                                count++;
                             }
                         }   
                     }
