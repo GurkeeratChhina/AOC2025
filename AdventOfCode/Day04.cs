@@ -11,7 +11,7 @@ public class Day04 : BaseDay
 
     public override ValueTask<string> Solve_1() => new($"{Part1()}");
 
-    public override ValueTask<string> Solve_2() => new($"{Part2Faster3()}");
+    public override ValueTask<string> Solve_2() => new($"{Part2Faster5()}");
 
     public int Part1(){
         int height = _input.Length;
@@ -208,66 +208,170 @@ public class Day04 : BaseDay
         int height = _input.Length;
         int width = _input[0].Length;
         int size = height * width;
-        int totalDeaths = 0;
+        int deaths = 0;
         
+        byte[] grid = new byte[size];
+        var q = new Stack<int>();
 
-        byte[] grid = new byte[size]; //flattened grid of neighbours, counting oneself.
-        var q = new Queue<int>();
-
-        Span<(int dx, int dy)> dirs = stackalloc (int, int)[]
-        {
-            (-1,-1),(0,-1),(1,-1),
-            (-1, 0),(0, 0),(1, 0),
-            (-1, 1),(0, 1),(1, 1)
-        };
-
-        //populate grid from input
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 if (_input[y][x] == '@') {
-                    // increment neighbors
                     byte count = 0;
-                    foreach (var (dx, dy) in dirs) {
-                        int nx = x + dx;
-                        int ny = y + dy;
-                        
-                        if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
-                            if (_input[ny][nx] == '@') {
-                                count++;
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            int nx = x + dx;
+                            int ny = y + dy;
+                            
+                            if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
+                                if (_input[ny][nx] == '@') {
+                                    count++;
+                                }
                             }
-                        }  
+                        }   
                     }
                     grid[y*width+x] = count;
                     if (count < 5) {
-                        q.Enqueue(y*width+x);
+                        q.Push(y*width+x);
                     }                     
                 }
             }
         }
 
         while (q.Count > 0) {
-            int i = q.Dequeue();
+            int i = q.Pop();
             if (grid[i] == 0) continue;
             grid[i] = 0;
-            totalDeaths++;
+            deaths++;
 
             int y = i / width;
-            int x = i % width; 
+            int x = i - y * width; 
 
-            foreach (var (dx, dy) in dirs) {
-                int nx = x + dx;
-                int ny = y + dy;
-                if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
-                    int newi = ny * width + nx;
-                    if (grid[newi] == 0) continue;
-                    grid[newi]--;
-                    if (grid[newi] < 5) q.Enqueue(newi);
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
+                        int newi = ny * width + nx;
+                        if (grid[newi] == 0) continue;
+                        if (--grid[newi] < 5) {
+                            q.Push(newi);
+                        } 
+                    }
                 }
             }
         }
 
-        return totalDeaths;
+        return deaths;
     }
 
-    
+    public int Part2Faster4() {
+        int height = _input.Length;
+        int width = _input[0].Length;
+        int size = (height + 2) * (width + 2);
+        int deaths = 0;
+        
+        byte[] grid = new byte[size];
+        var q = new Stack<int>();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (_input[y][x] == '@') {
+                    byte count = 0;
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            int nx = x + dx;
+                            int ny = y + dy;
+                            
+                            if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
+                                if (_input[ny][nx] == '@') {
+                                    count++;
+                                }
+                            }
+                        }   
+                    }
+                    if (count < 5) {
+                        grid[(y+1)*(width+2)+(x+1)] = 0;
+                        deaths++;
+                        q.Push((y+1)*(width+2)+(x+1));
+                    } else {
+                        grid[(y+1)*(width+2)+(x+1)] = count;
+                    }             
+                }
+            }
+        }
+
+        int[] dirs = {-width-3, -width-2, -width-1, -1, 1, width+1, width+2, width+3};
+
+        while (q.Count > 0) {
+            int posToKill = q.Pop();
+
+            for (int i = 0; i < 8; i++) {
+                int nextPos = posToKill + dirs[i];
+                if (grid[nextPos] == 0) continue;
+                if (--grid[nextPos] < 5) {
+                    grid[nextPos] = 0;
+                    deaths++;
+                    q.Push(nextPos);
+                }
+            }
+        }
+
+        return deaths;
+    }
+
+    public int Part2Faster5() {
+        int height = _input.Length;
+        int width = _input[0].Length;
+        int size = (height + 2) * (width + 2);
+        int deaths = 0;
+        
+        Span<byte> grid = stackalloc byte[size];
+        Span<int> q = stackalloc int[size];
+        int head = 0;
+        int tail = 0;
+
+        Span<int> dirs = stackalloc[] {-width-3, -width-2, -width-1, -1, 1, width+1, width+2, width+3};
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (_input[y][x] == '@') {
+                    byte count = 0;
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            int nx = x + dx;
+                            int ny = y + dy;
+                            
+                            if ((uint)nx < (uint)width && (uint)ny < (uint)height) {
+                                if (_input[ny][nx] == '@') {
+                                    count++;
+                                }
+                            }
+                        }   
+                    }
+                    if (count < 5) {
+                        grid[(y+1)*(width+2)+(x+1)] = 0;
+                        deaths++;
+                        q[tail++] = (y+1)*(width+2)+(x+1);
+                    } else {
+                        grid[(y+1)*(width+2)+(x+1)] = count;
+                    }             
+                }
+            }
+        }
+
+        while (head < tail) {
+            int posToKill = q[head++];
+            for (int i = 0; i < 8; i++) {
+                int nextPos = posToKill + dirs[i];
+                if (grid[nextPos] == 0) continue;
+                if (--grid[nextPos] < 5) {
+                    grid[nextPos] = 0;
+                    deaths++;
+                    q[tail++] = nextPos;  
+                }
+            }
+        }
+
+        return deaths;
+    }
 }
