@@ -3,44 +3,54 @@
 public class Day04 : BaseDay
 {
     private readonly string[] _input;
+    private int height;
+    private int width;
+    private int size;
+    byte[] grid;
 
     public Day04()
     {
         _input = File.ReadAllLines(InputFilePath);
+        height = _input.Length;
+        width = _input[0].Length;
+        size = (height + 2) * (width + 2);
+        grid = new byte[size];
     }
 
     public override ValueTask<string> Solve_1() => new($"{Part1()}");
 
     public override ValueTask<string> Solve_2() => new($"{Part2Faster5()}");
 
-    public int Part1(){
-        int height = _input.Length;
-        int width = _input[0].Length;
-        int count = 0;
-        int surrounding;
-        // Console.WriteLine(height + " " + width);
-        for(int i = 0; i < height; i++) {
-            // Console.WriteLine("row " + i + " is equal to " + _input[i]);
-            for (int j = 0; j < width; j++) {
-                // Console.WriteLine("looking at column " + j);
-                if (_input[i][j] == '@') {
-                    // Console.WriteLine("found an @");
-                    surrounding = 0;
+    public (int[] queue, int toKill) ParseToGrid() {
+        int tail = 0;
+        int[] q = new int[size];
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (_input[y][x] == '@') {
+                    byte count = 0;
                     for (int dx = -1; dx <= 1; dx++) {
                         for (int dy = -1; dy <= 1; dy++) {
-                            if (i + dy >= 0 && i + dy < height && j + dx >= 0 && j + dx < width && _input[i+dy][j+dx] == '@') {
-                                surrounding++;
+                            int nx = x + dx;
+                            int ny = y + dy;
+                            if (nx >= 0 && nx < width && ny >= 0 && ny < height && _input[ny][nx] == '@') {
+                                count++;
                             }
-                        }
+                        }   
                     }
-                    if (surrounding <5) {
-                        count++;
-                    }
-                    // Console.WriteLine("evaluated column " + j + " new count is " + count);
+                    if (count < 5) {
+                        grid[(y+1)*(width+2)+(x+1)] = 0;
+                        q[tail++] = (y+1)*(width+2)+(x+1);
+                    } else {
+                        grid[(y+1)*(width+2)+(x+1)] = count;
+                    }             
                 }
             }
         }
-        return count;
+        return (q, tail);
+    }
+
+    public int Part1(){
+        return ParseToGrid().toKill;
     }
 
     public int Part2(){
@@ -320,41 +330,13 @@ public class Day04 : BaseDay
     }
 
     public int Part2Faster5() {
-        int height = _input.Length;
-        int width = _input[0].Length;
-        int size = (height + 2) * (width + 2);
         int deaths = 0;
-        
-        Span<byte> grid = stackalloc byte[size];
-        Span<int> q = stackalloc int[size];
+
         int head = 0;
-        int tail = 0;
+        (int[] q, int tail) = ParseToGrid();
+        deaths += tail;
 
         Span<int> dirs = stackalloc[] {-width-3, -width-2, -width-1, -1, 1, width+1, width+2, width+3};
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (_input[y][x] == '@') {
-                    byte count = 0;
-                    for (int dx = -1; dx <= 1; dx++) {
-                        for (int dy = -1; dy <= 1; dy++) {
-                            int nx = x + dx;
-                            int ny = y + dy;
-                            if (nx >= 0 && nx < width && ny >= 0 && ny < height && _input[ny][nx] == '@') {
-                                count++;
-                            }
-                        }   
-                    }
-                    if (count < 5) {
-                        grid[(y+1)*(width+2)+(x+1)] = 0;
-                        deaths++;
-                        q[tail++] = (y+1)*(width+2)+(x+1);
-                    } else {
-                        grid[(y+1)*(width+2)+(x+1)] = count;
-                    }             
-                }
-            }
-        }
 
         while (head < tail) {
             int posToKill = q[head++];
