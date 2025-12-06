@@ -3,23 +3,16 @@
 public class Day05 : BaseDay
 {
     private readonly string[] _input;
+    List<(long low, long high)> ranges;
+    List<long> food;
 
     public Day05()
     {
         _input = File.ReadAllLines(InputFilePath);
-    }
+        ranges = new List<(long,long)>();
+        food = new List<long>();
 
-    public override ValueTask<string> Solve_1() => new($"{Part1()}");
-
-    public override ValueTask<string> Solve_2() => new($"{Part2()}");
-
-    public int Part1(){
-        int count = 0;
         int split = 0;
-
-        List<(long,long)> ranges = new List<(long,long)>();
-        List<long> food = new List<long>();
-
         for (; split < _input.Length; split++) {
             string line = _input[split];
             if (line.Length == 0) {
@@ -31,12 +24,26 @@ public class Day05 : BaseDay
         for (int i = split+1; i < _input.Length; i++) {
             food.Add(long.Parse(_input[i]));
         }
+    }
 
+    public override ValueTask<string> Solve_1() => new($"{Part1()}");
+
+    public override ValueTask<string> Solve_2() => new($"{Part2()}");
+
+    public int Part1(){
+        int count = 0;
+        
         ranges.Sort();
         food.Sort();
 
+        int current_index = 0;
         foreach (var item in food) {
-
+            while( current_index < ranges.Count && ranges[current_index].high < item) {
+                current_index++;
+            }
+            if (current_index < ranges.Count && item >= ranges[current_index].low) {
+                count++;
+            }
         }
 
         return count;
