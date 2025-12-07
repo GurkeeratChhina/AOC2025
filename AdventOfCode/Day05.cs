@@ -54,17 +54,6 @@ public class Day05 : BaseDay
         long prev_low = -1;
         long prev_high = -1;
 
-        List<(long low,long high)> ranges = new List<(long,long)>();
-
-        for (int i = 0; i < _input.Length; i++) {
-            string line = _input[i];
-            if (line.Length == 0) {
-                break;
-            }
-            string[] halves = line.Split("-");
-            ranges.Add((long.Parse(halves[0]), long.Parse(halves[1])));
-        }
-
         ranges.Sort();
 
         foreach (var range in ranges) {

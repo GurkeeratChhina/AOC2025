@@ -22,6 +22,7 @@ public class Day04 : BaseDay
     public override ValueTask<string> Solve_2() => new($"{Part2Faster5()}");
 
     public (int[] queue, int toKill) ParseToGrid() {
+        // TODO: parse via rolling windows horizontally then vertically to reduce checks per cell by half. 
         int tail = 0;
         int[] q = new int[size];
         for (int y = 0; y < height; y++) {
