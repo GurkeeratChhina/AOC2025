@@ -1,6 +1,6 @@
 if (args.Length == 0)
 {
-    await Solver.SolveAll(opt => {
+    await Solver.SolveLast(opt => {
         opt.ClearConsole = false;
         opt.ElapsedTimeFormatSpecifier = "F3";
     });
