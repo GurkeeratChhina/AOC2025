@@ -10,6 +10,8 @@ public class Day08 : BaseDay
     private long[] ys;
     private long[] zs;
 
+    private int ArbitraryCutoff = 10000;
+
     public Day08()
     {
         _input = File.ReadAllLines(InputFilePath);
@@ -35,11 +37,11 @@ public class Day08 : BaseDay
         }
 
         long temp;
+        //parse to x,y,z
         for (int i = 0; i < numPoints; i++) {
             string[] nums = _input[i].Split(',');
-            temp = 0;
 
-            // parse input into xs, ys, zs
+            temp = 0;
             for (int j = 0; j < nums[0].Length; j++) {
                 temp = temp*10 + nums[0][j] - '0';
             }
@@ -58,7 +60,7 @@ public class Day08 : BaseDay
             zs[i] = temp;
         }
 
-        int k = 0; // TODO: relate k to i and j.
+        int k = 0; // flattened i and j
         for (int i = 0; i < numPoints-1; i++) {
             for (int j = i+1; j < numPoints; j++) {
                 pairwiseDistances[k] = distance(xs[i], ys[i], zs[i], xs[j], ys[j], zs[j]);
@@ -177,14 +179,10 @@ public class Day08 : BaseDay
             }
             j+= i+1;
 
-            // Console.WriteLine("The " + k2 + " edge is " + i + " and " + j);
-
             if (encountered.Contains(i) && encountered.Contains(j)) {
-                // Console.WriteLine("Found both indices " + i + " and " + j);
                 for (int m = 0; m < listOfCliques.Count; m++) {
                     //i and j in same clique
                     if (listOfCliques[m].Contains(i) && listOfCliques[m].Contains(j)) {
-                        // Console.WriteLine("THIS HAPPENED");
                         break;
                     }
                     //i and j in seperate cliques, merge and remove
@@ -233,7 +231,6 @@ public class Day08 : BaseDay
                 encountered.Add(j);
             }
             if (listOfCliques[0].Count == numPoints) {
-                // finished, do smth with i and j
                 return xs[i]*xs[j];
             }
             k2++;
