@@ -55,7 +55,7 @@ public class Day12 : BaseDay
     }
 
     public int Part1(){
-        
+        parse();
         int total = 0;
         for (int i = 0; i < number_rectangles; i++) {
             int rectangle_area = rectanglexs[i] * rectangleys[i];
