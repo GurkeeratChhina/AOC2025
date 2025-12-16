@@ -3,48 +3,55 @@
 public class Day11 : BaseDay
 {
     private readonly string[] _input;
-    Dictionary<string, HashSet<string>> outEdges;
-    Dictionary<string, HashSet<string>> inEdges;
+    Dictionary<int, HashSet<int>> outEdges;
+    Dictionary<int, HashSet<int>> inEdges;
 
     public Day11()
     {
         _input = File.ReadAllLines(InputFilePath);
-        outEdges = new Dictionary<string, HashSet<string>>();
-        inEdges = new Dictionary<string, HashSet<string>>();
+        outEdges = new Dictionary<int, HashSet<int>>();
+        inEdges = new Dictionary<int, HashSet<int>>();
     }
 
     public override ValueTask<string> Solve_1() => new($"{Part1()}");
 
     public override ValueTask<string> Solve_2() => new($"{Part2()}");
 
-    public void parse() {
-        foreach (var line in _input) {
-            string[] ids = line.Split(new char[] {':', ' '});
-            var temp = new HashSet<string>();
-            for (int i = 2; i < ids.Length; i++) {
-                temp.Add(ids[i]);
-            }
-            outEdges[ids[0]] = temp;
-            for (int i = 2; i < ids.Length; i++) {
-                if (inEdges.ContainsKey(ids[i])) {
-                    inEdges[ids[i]].Add(ids[0]);
-                } else {
-                    inEdges[ids[i]] = new HashSet<string>(new string[]{ids[0]});
-                }
-            }
-        }
-        outEdges["out"] = new HashSet<string>();
+    public int encode(ReadOnlySpan<Char> s) {
+        return (s[0] - 'a') * 26 * 26 + (s[1] - 'a') * 26 + (s[2] - 'a');
     }
 
-    public HashSet<string> reachable(string start) {
-        var q = new Queue<string>();
-        var reachables = new HashSet<string>();
-        q.Enqueue(start);
+    public void parse() {
+        foreach (var line in _input) {
+            int start = encode(line.AsSpan(0,3));
+            // Console.WriteLine(line + " " + start);
+            var temp = new HashSet<int>();
+            for (int i = 5; i < line.Length-2; i+=4) {
+                int outEdge = encode(line.AsSpan(i,3));
+                // Console.WriteLine(outEdge);
+                temp.Add(outEdge);
+                if (!inEdges.ContainsKey(outEdge)) {
+                    inEdges[outEdge] = new HashSet<int>();
+                }
+                inEdges[outEdge].Add(start);
+            }
+
+            outEdges[start] = temp;
+        }
+    }
+
+    public HashSet<int> reachable(string start, string end) {
+        var q = new Queue<int>();
+        var reachables = new HashSet<int>();
+        q.Enqueue(encode(start.AsSpan()));
         while(q.Count > 0) {
-            var pop = q.Dequeue();
-            if (reachables.Contains(pop)) continue;
-            reachables.Add(pop);
-            foreach (var outedge in outEdges[pop]) {
+            var curr = q.Dequeue();
+            if (curr == encode(end.AsSpan())) {
+                return reachables;
+            }
+            if (reachables.Contains(curr)) continue;
+            reachables.Add(curr);
+            foreach (var outedge in outEdges[curr]) {
                 q.Enqueue(outedge);
             }
         }
@@ -52,18 +59,18 @@ public class Day11 : BaseDay
     }
 
     public int pathsBetween(string start, string end) {
-        var values = new Dictionary<string, int>();
-        values[start] = 1;
+        var values = new Dictionary<int, int>();
+        values[encode(start.AsSpan())] = 1;
 
-        var reachables = reachable(start);
-        var q = new Queue<string>();
-        q.Enqueue(start);
-        var visited = new HashSet<string>();
-        
+        var reachables = reachable(start, end);
+        var visited = new HashSet<int>();
+
+        var q = new Queue<int>();
+        q.Enqueue(encode(start.AsSpan()));
         while(q.Count > 0) {
             var curr = q.Dequeue();
             visited.Add(curr);
-            if (curr == end) {
+            if (curr == encode(end.AsSpan())) {
                 return values[curr];
             }
             foreach (var next in outEdges[curr]) {
@@ -84,7 +91,7 @@ public class Day11 : BaseDay
                 }
             }
         }
-        return values[end];
+        return values[encode(end.AsSpan())];
     }
 
     public int Part1(){
