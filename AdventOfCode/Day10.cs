@@ -5,6 +5,7 @@ using Google.OrTools.LinearSolver;
 
 public class Day10 : BaseDay
 {
+    // New method variables
     private readonly string[] _input;
     int n;
     private int[][,] buttons;
@@ -12,8 +13,10 @@ public class Day10 : BaseDay
     private int[] numButtons;
     private int[] numBits;
 
-    public Day10()
-    {
+    // Old method variables
+
+    // For new method
+    public Day10(){
         _input = File.ReadAllLines(InputFilePath);
         n = _input.Length;
         buttons = new int[n][,];
@@ -22,120 +25,125 @@ public class Day10 : BaseDay
         numBits = new int[n];
     }
 
-    public override ValueTask<string> Solve_1() => new($"{part1ManualMatrix()}");
+    // For old method
+    public Day10() {
+
+    }
+
+    public override ValueTask<string> Solve_1() => new($"{Part1()}");
 
     public override ValueTask<string> Solve_2() => new($"{part2Placeholder()}");
 
-    // void parse() {
-    //     for (int i = 0; i < n; i++) {
-    //         string line = _input[i];
-    //         int j = 1;
-
-    //         // parse .# part
-    //         int arrangement = 0;
-    //         for (; j < line.Length; j++) {
-    //             if (line[j] == ']') break;
-    //             if (line[j] == '#') {
-    //                 arrangement ++;
-    //             }
-    //         }
-    //         startingArrangements[i][j] = 1;
-    //         int bitlength = j-2 +'0'; // not actually bitlength, but used to invert a digit 'n' to represent the nth bit counting from the left instead of the right
-
-    //         // parse numbers
-    //         List<int> listOfButtons = new List<int>();
-    //         int number = 0;
-    //         j+= 3;
-    //         for (; j < line.Length; j++) {
-    //             if (line[j] == '{') break;
-    //             else if (line[j] == ',') continue;
-    //             else if (line[j] == ')') {
-    //                 listOfButtons.Add(number);
-    //                 number = 0;
-    //                 j+=2;
-    //             } else {
-    //                 number += (1 << (bitlength - line[j]));
-    //             }
-    //         }
-    //         buttons[i] = listOfButtons;
-    //         j++;
-    //         int num = 0;
-    //         List<int> target = new List<int>();
-    //         for (; j < line.Length; j++) {
-    //             if (line[j] == '}') break;
-    //             if (line[j] == ',') {
-    //                 target.Add(num);
-    //                 num = 0;
-    //             } else {
-    //                 num = num*10 + (line[j]-'0');
-    //             }
-    //         }
-    //         targets[i] = target;
-    //     }
-    // }
-
-    void parse2() {
+    void parse() {
         for (int i = 0; i < n; i++) {
-            string[] line = _input[i].Split(new char[]{'{', '}', '(', ')', '[', ']', ' '}, StringSplitOptions.RemoveEmptyEntries);
+            string line = _input[i];
+            int j = 1;
 
-            numBits[i] = line[0].Length;
-            numButtons[i] = line.Length - 2;
-            buttons[i] = new int[numBits[i], numButtons[i]+1];
-            for (int j = 0; j < numButtons[i]; j++) {
-                foreach (var digit in line[j+1]) {
-                    if (digit == ',') continue;
-                    buttons[i][(digit - '0'), j] = 1;
+            // parse .# part
+            int arrangement = 0;
+            for (; j < line.Length; j++) {
+                if (line[j] == ']') break;
+                if (line[j] == '#') {
+                    arrangement ++;
                 }
             }
-            for (int j = 0; j < numBits[i]; j++) {
-                if (line[0][j] == '#') {
-                    buttons[i][j, numButtons[i]] = 1;
+            startingArrangements[i][j] = 1;
+            int bitlength = j-2 +'0'; // not actually bitlength, but used to invert a digit 'n' to represent the nth bit counting from the left instead of the right
+
+            // parse numbers
+            List<int> listOfButtons = new List<int>();
+            int number = 0;
+            j+= 3;
+            for (; j < line.Length; j++) {
+                if (line[j] == '{') break;
+                else if (line[j] == ',') continue;
+                else if (line[j] == ')') {
+                    listOfButtons.Add(number);
+                    number = 0;
+                    j+=2;
+                } else {
+                    number += (1 << (bitlength - line[j]));
                 }
             }
-            finalTargets[i] = new int[numBits[i]];
-            var xs = line[^1].Split(',');
-            for (int j = 0; j < numBits[i]; j ++) {
-                finalTargets[i][j] = int.Parse(xs[j]);
+            buttons[i] = listOfButtons;
+            j++;
+            int num = 0;
+            List<int> target = new List<int>();
+            for (; j < line.Length; j++) {
+                if (line[j] == '}') break;
+                if (line[j] == ',') {
+                    target.Add(num);
+                    num = 0;
+                } else {
+                    num = num*10 + (line[j]-'0');
+                }
             }
-
-            // Console.WriteLine($"Row {i} buttons:");
-            // Console.WriteLine("starting:");
-            // for (int k = 0; k < numBits[i]; k++) {
-            //     Console.WriteLine(startingArrangements[i][k]);
-            // }
-            // for(int k = 0; k < numButtons[i]; k++) {
-            //     Console.WriteLine($"{k}-th button:");
-            //     for (int r = 0; r < numBits[i]; r++) {
-            //         Console.WriteLine(buttons[i][k,r]);
-            //     }
-            // }
+            targets[i] = target;
         }
-        
     }
-    
-    // public int Part1(){
-    //     parse();
-    //     int total = 0;
+
+    // void parse2() {
     //     for (int i = 0; i < n; i++) {
-    //         // Console.WriteLine(i);
-    //         var results = new Dictionary<int, int> {{startingArrangements[i],0}};
-    //         foreach (var button in buttons[i]) {
-    //             // Console.WriteLine("testing button number value " + button);
-    //             var newResults = new Dictionary<int, int>(results);
-    //             foreach (var (result, mincount) in results) {
-    //                 int x = button ^ result;
-    //                 if (results.ContainsKey(x)) {
-    //                     newResults[x] = Math.Min(results[x], mincount+1);
-    //                 } else {
-    //                     newResults.Add(x,mincount+1);
-    //                 }
+    //         string[] line = _input[i].Split(new char[]{'{', '}', '(', ')', '[', ']', ' '}, StringSplitOptions.RemoveEmptyEntries);
+
+    //         numBits[i] = line[0].Length;
+    //         numButtons[i] = line.Length - 2;
+    //         buttons[i] = new int[numBits[i], numButtons[i]+1];
+    //         for (int j = 0; j < numButtons[i]; j++) {
+    //             foreach (var digit in line[j+1]) {
+    //                 if (digit == ',') continue;
+    //                 buttons[i][(digit - '0'), j] = 1;
     //             }
-    //             results = newResults;
     //         }
-    //         total += results[0];
+    //         for (int j = 0; j < numBits[i]; j++) {
+    //             if (line[0][j] == '#') {
+    //                 buttons[i][j, numButtons[i]] = 1;
+    //             }
+    //         }
+    //         finalTargets[i] = new int[numBits[i]];
+    //         var xs = line[^1].Split(',');
+    //         for (int j = 0; j < numBits[i]; j ++) {
+    //             finalTargets[i][j] = int.Parse(xs[j]);
+    //         }
+
+    //         // Console.WriteLine($"Row {i} buttons:");
+    //         // Console.WriteLine("starting:");
+    //         // for (int k = 0; k < numBits[i]; k++) {
+    //         //     Console.WriteLine(startingArrangements[i][k]);
+    //         // }
+    //         // for(int k = 0; k < numButtons[i]; k++) {
+    //         //     Console.WriteLine($"{k}-th button:");
+    //         //     for (int r = 0; r < numBits[i]; r++) {
+    //         //         Console.WriteLine(buttons[i][k,r]);
+    //         //     }
+    //         // }
     //     }
-    //     return total;
+        
     // }
+    
+    public int Part1(){
+        parse();
+        int total = 0;
+        for (int i = 0; i < n; i++) {
+            // Console.WriteLine(i);
+            var results = new Dictionary<int, int> {{startingArrangements[i],0}};
+            foreach (var button in buttons[i]) {
+                // Console.WriteLine("testing button number value " + button);
+                var newResults = new Dictionary<int, int>(results);
+                foreach (var (result, mincount) in results) {
+                    int x = button ^ result;
+                    if (results.ContainsKey(x)) {
+                        newResults[x] = Math.Min(results[x], mincount+1);
+                    } else {
+                        newResults.Add(x,mincount+1);
+                    }
+                }
+                results = newResults;
+            }
+            total += results[0];
+        }
+        return total;
+    }
 
     // public int Part2(){
     //     return 0;
@@ -310,11 +318,6 @@ public class Day10 : BaseDay
     }
 
     int bruteForceFreeVariablesBoolean(int[,] matrix, List<int> freeVariables) {
-        // Console.Write("The free variables are:");
-        // foreach (var word in freeVariables) {
-        //     Console.Write(word + ", ");
-        // }
-        // Console.Write('\n');
         int n = freeVariables.Count;
         int smallest = 0;
         for (int i = 0; i < matrix.GetLength(0); i++) {
@@ -395,7 +398,14 @@ public class Day10 : BaseDay
             // Console.WriteLine("reduced to");
             List<int> freeVars = eliminationBool(buttons[i]);
             // printMatrix(buttons[i]);
-            total += bruteForceFreeVariablesBoolean(buttons[i], freeVars);
+            // Console.Write("The free variables are:");
+            // foreach (var word in freeVars) {
+            //     Console.Write(word + ", ");
+            // }
+            // Console.Write('\n');
+            int sum = bruteForceFreeVariablesBoolean(buttons[i], freeVars);
+            Console.WriteLine("The min button presses are " + sum);
+            total += sum;
         }
         return total;
     }
